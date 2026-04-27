@@ -19,3 +19,4 @@ After writing or editing code, check LSP diagnostics and fix errors before proce
 
 # Important Rules
 - ALWAYS verify the reasonableness of your solution before you implement each piece of the solution
+- When running into issues, always use the latest docs via context7 to investigate a fix
