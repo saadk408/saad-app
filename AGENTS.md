@@ -16,3 +16,6 @@ Prefer LSP over Grep/Read for code navigation — it's faster, precise, and avoi
 Use Grep only when LSP isn't available or for text/pattern searches (comments, strings, config).
 
 After writing or editing code, check LSP diagnostics and fix errors before proceeding.
+
+# Important Rules
+- ALWAYS verify the reasonableness of your solution before you implement each piece of the solution
