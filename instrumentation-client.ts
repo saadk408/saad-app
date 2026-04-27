@@ -10,8 +10,8 @@ Sentry.init({
   // Add optional integrations for additional features
   integrations: [Sentry.replayIntegration()],
 
-  // 100% in development, 10% in production. Use tracesSampler for finer control.
-  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+  // 100% in development and production. Use tracesSampler for finer control.
+  tracesSampleRate: 1.0,
   // Enable logs to be sent to Sentry
   enableLogs: true,
 
