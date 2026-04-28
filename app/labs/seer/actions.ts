@@ -1,5 +1,7 @@
 "use server";
 
+import * as Sentry from "@sentry/nextjs";
+
 import { withLabMetric } from "@/lib/metrics";
 
 type LineItem = { productId: string; code?: string };
@@ -53,6 +55,7 @@ export const runBuggyCheckout = withLabMetric(
       return { ok: true, lineItems: totals.length, total: totals.reduce((a, b) => a + b, 0) };
     } catch (err) {
       const e = err as Error;
+      Sentry.captureException(e);
       return {
         ok: false,
         name: e.name,
