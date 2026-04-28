@@ -23,9 +23,12 @@ Sentry.init({
   // Define how likely Replay events are sampled when an error occurs.
   replaysOnErrorSampleRate: 1.0,
 
-  // Enable sending user PII (Personally Identifiable Information)
+  // Enable the SDK's default data scrubbing by withholding user PII
+  // (IP, request headers, cookies, request body). Flip to true to send PII.
+  // Note: since @sentry/nextjs v10.4.0, browser user IP inference is also
+  // gated on this flag.
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
-  sendDefaultPii: true,
+  sendDefaultPii: false,
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
