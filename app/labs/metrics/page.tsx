@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import * as Sentry from "@sentry/nextjs";
 
 import { PageHeader } from "@/app/components/page-header";
 import { LabSpecimen, type LogEntry } from "@/app/components/lab-specimen";
@@ -45,9 +44,7 @@ export default function MetricsLab() {
           onClickAction={() => {
             const next = countState + 1;
             setCountState(next);
-            Sentry.metrics.count("metrics_demo_count", 1, {
-              attributes: { kind: "manual" },
-            });
+            // TODO: Sentry.metrics.count("metrics_demo_count", 1, { attributes: { kind: "manual" } });
             setLog({
               id: "SPC-MET-01",
               text: `count() emitted (session n=${next})`,
@@ -72,7 +69,7 @@ export default function MetricsLab() {
           specimen="SPC-MET-02"
           onClickAction={() => {
             const value = Math.floor(Math.random() * 100);
-            Sentry.metrics.gauge("metrics_demo_gauge", value);
+            // TODO: Sentry.metrics.gauge("metrics_demo_gauge", value);
             setLog({
               id: "SPC-MET-02",
               text: `gauge=${value}`,
@@ -97,9 +94,7 @@ export default function MetricsLab() {
           specimen="SPC-MET-03"
           onClickAction={() => {
             const ms = 50 + Math.random() * 450;
-            Sentry.metrics.distribution("metrics_demo_distribution", ms, {
-              unit: "millisecond",
-            });
+            // TODO: Sentry.metrics.distribution("metrics_demo_distribution", ms, { unit: "millisecond" });
             setLog({
               id: "SPC-MET-03",
               text: `distribution=${ms.toFixed(1)}ms`,
@@ -144,10 +139,10 @@ export default function MetricsLab() {
             const tier = TIERS[fanoutTick % TIERS.length];
             const page = PAGES[fanoutTick % PAGES.length];
             const ms = 50 + Math.random() * 450;
-            Sentry.metrics.distribution("metrics_demo_distribution", ms, {
-              unit: "millisecond",
-              attributes: { region, tier, page },
-            });
+            // TODO: Sentry.metrics.distribution("metrics_demo_distribution", ms, {
+            //   unit: "millisecond",
+            //   attributes: { region, tier, page },
+            // });
             setFanoutTick(fanoutTick + 1);
             setLog({
               id: "SPC-MET-05",

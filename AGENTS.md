@@ -1,4 +1,4 @@
-This is a Next.js 16 + React 19 + Tailwind 4 sandbox built to exercise every Sentry feature (errors, tracing, logs, replays, Seer, feedback). Designed as a lab-notebook-styled e-commerce demo with `/labs/*` "specimen" pages that deliberately surface failure modes. Bun for package management, TypeScript strict, App Router only.
+This is a Next.js 16 + React 19 + Tailwind 4 sandbox built to exercise every Sentry feature (errors, tracing, logs, replays, Seer, feedback). Designed as a lab-notebook-styled e-commerce demo with `/labs/*` "specimen" pages that deliberately surface failure modes. npm for package management, TypeScript strict, App Router only.
 
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know

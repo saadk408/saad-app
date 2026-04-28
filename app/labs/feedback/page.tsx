@@ -44,7 +44,7 @@ Sentry.init({
       </pre>
 
       <p className="font-mono text-[11px] text-[var(--color-mute)]">
-        TODO: enable feedbackIntegration once @sentry/nextjs is installed (see /docs §10).
+        TODO: enable feedbackIntegration once @sentry/nextjs is installed (see <code>docs/lab-handout.md</code>).
       </p>
     </div>
   );

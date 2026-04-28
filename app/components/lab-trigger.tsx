@@ -1,6 +1,5 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
 import { useFormStatus } from "react-dom";
 
 type Props = {
@@ -26,11 +25,14 @@ export function LabTrigger({
   onClickAction,
 }: Props) {
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    if (lab && specimen) {
-      Sentry.metrics.count("lab_trigger", 1, {
-        attributes: { lab, specimen, runtime: "client" },
-      });
-    }
+    // TODO: emit a Sentry client metric here, e.g.
+    //   if (lab && specimen) {
+    //     Sentry.metrics.count("lab_trigger", 1, {
+    //       attributes: { lab, specimen, runtime: "client" },
+    //     });
+    //   }
+    void lab;
+    void specimen;
     onClickAction?.(event);
   };
 

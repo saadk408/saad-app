@@ -103,7 +103,7 @@ export default function SeerLab() {
       ) : null}
 
       <p className="font-mono text-[11px] text-[var(--color-mute)]">
-        With Sentry + Seer wired in (see /docs/sentry-test-lab.md §10), this
+        With Sentry + Seer wired in (see <code>docs/lab-handout.md</code>), this
         deep stack would be analyzed automatically against the connected GitHub
         repo.
       </p>
