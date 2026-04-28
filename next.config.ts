@@ -16,4 +16,11 @@ export default withSentryConfig(nextConfig, {
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   // This can increase your server load as well as your hosting bill.
   tunnelRoute: "/monitoring",
+
+  // Associate the git commits in HEAD..previous-release with each build so Sentry can
+  // attribute issues to a suspect commit and assignee. Requires .git at build time and
+  // the GitHub integration installed for this repo.
+  release: {
+    setCommits: { auto: true },
+  },
 });
