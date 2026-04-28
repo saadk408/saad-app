@@ -1,5 +1,7 @@
 "use server";
 
+import { withLabMetric } from "@/lib/metrics";
+
 type LineItem = { productId: string; code?: string };
 type CheckoutInput = { lineItems: LineItem[] };
 
@@ -40,19 +42,23 @@ function applyDiscount(
   return Number((price as number).toFixed(2)) * (1 - 0.1);
 }
 
-export async function runBuggyCheckout(): Promise<SeerResult> {
-  try {
-    const totals = parseOrder({
-      lineItems: [{ productId: "missing", code: "SUMMER10" }],
-    });
-    return { ok: true, lineItems: totals.length, total: totals.reduce((a, b) => a + b, 0) };
-  } catch (err) {
-    const e = err as Error;
-    return {
-      ok: false,
-      name: e.name,
-      message: e.message,
-      frames: (e.stack ?? "no stack").split("\n").slice(0, 14),
-    };
-  }
-}
+export const runBuggyCheckout = withLabMetric(
+  "seer",
+  "SPC-SEE-01",
+  async (): Promise<SeerResult> => {
+    try {
+      const totals = parseOrder({
+        lineItems: [{ productId: "missing", code: "SUMMER10" }],
+      });
+      return { ok: true, lineItems: totals.length, total: totals.reduce((a, b) => a + b, 0) };
+    } catch (err) {
+      const e = err as Error;
+      return {
+        ok: false,
+        name: e.name,
+        message: e.message,
+        frames: (e.stack ?? "no stack").split("\n").slice(0, 14),
+      };
+    }
+  },
+);

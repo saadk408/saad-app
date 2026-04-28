@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/app/components/page-header";
 import { LabSpecimen, type LogEntry } from "@/app/components/lab-specimen";
-import { LabTriggerSubmit } from "@/app/components/lab-trigger";
+import { LabTrigger, LabTriggerSubmit } from "@/app/components/lab-trigger";
 import { throwInAction } from "./actions";
 
 class AppError extends Error {
@@ -35,7 +35,7 @@ export default function ErrorsLab() {
     <div className="cascade">
       <PageHeader
         number="01"
-        total="05"
+        total="06"
         path="/labs/errors"
         title="Errors"
         subtitle="A field guide to thrown exceptions and where each one is captured."
@@ -47,15 +47,15 @@ export default function ErrorsLab() {
         title="THROW IN ONCLICK"
         description="Synchronous error inside an event handler. React error boundaries don't catch this — surfaces via window.error and Sentry's global handler."
       >
-        <button
-          type="button"
-          className="btn-trigger"
-          onClick={() => {
+        <LabTrigger
+          lab="errors"
+          specimen="SPC-ERR-01"
+          onClickAction={() => {
             throw new Error("Client onClick error: button SPC-ERR-01");
           }}
         >
-          <span className="btn-trigger-label">[ TRIGGER ]</span>
-        </button>
+          TRIGGER
+        </LabTrigger>
       </LabSpecimen>
 
       <LabSpecimen
@@ -64,13 +64,13 @@ export default function ErrorsLab() {
         title="THROW DURING RENDER"
         description="Sets a state flag; the next render throws synchronously. The segment error boundary in app/error.tsx catches it."
       >
-        <button
-          type="button"
-          className="btn-trigger"
-          onClick={() => setShouldThrow(true)}
+        <LabTrigger
+          lab="errors"
+          specimen="SPC-ERR-02"
+          onClickAction={() => setShouldThrow(true)}
         >
-          <span className="btn-trigger-label">[ TRIGGER ]</span>
-        </button>
+          TRIGGER
+        </LabTrigger>
       </LabSpecimen>
 
       <LabSpecimen
@@ -79,13 +79,13 @@ export default function ErrorsLab() {
         title="USEEFFECT REJECTION"
         description="An async function inside useEffect rejects without try/catch — surfaces as an unhandled promise rejection."
       >
-        <button
-          type="button"
-          className="btn-trigger"
-          onClick={() => setUnhandledTick((t) => t + 1)}
+        <LabTrigger
+          lab="errors"
+          specimen="SPC-ERR-03"
+          onClickAction={() => setUnhandledTick((t) => t + 1)}
         >
-          <span className="btn-trigger-label">[ TRIGGER ]</span>
-        </button>
+          TRIGGER
+        </LabTrigger>
       </LabSpecimen>
 
       <LabSpecimen
@@ -107,10 +107,10 @@ export default function ErrorsLab() {
         result={log?.id === "SPC-ERR-05" ? log.text : null}
         resultTone="err"
       >
-        <button
-          type="button"
-          className="btn-trigger"
-          onClick={async () => {
+        <LabTrigger
+          lab="errors"
+          specimen="SPC-ERR-05"
+          onClickAction={async () => {
             const res = await fetch("/api/products?fail=1");
             const body = await res.json();
             setLog({
@@ -120,8 +120,8 @@ export default function ErrorsLab() {
             });
           }}
         >
-          <span className="btn-trigger-label">[ TRIGGER ]</span>
-        </button>
+          TRIGGER
+        </LabTrigger>
       </LabSpecimen>
 
       <LabSpecimen
@@ -130,16 +130,16 @@ export default function ErrorsLab() {
         title="TYPEERROR VARIANT"
         description="Calls a method on undefined. Different shape from the generic Error throw — useful for issue grouping."
       >
-        <button
-          type="button"
-          className="btn-trigger"
-          onClick={() => {
+        <LabTrigger
+          lab="errors"
+          specimen="SPC-ERR-06"
+          onClickAction={() => {
             const obj = undefined as unknown as { foo: () => void };
             obj.foo();
           }}
         >
-          <span className="btn-trigger-label">[ TRIGGER ]</span>
-        </button>
+          TRIGGER
+        </LabTrigger>
       </LabSpecimen>
 
       <LabSpecimen
@@ -148,10 +148,10 @@ export default function ErrorsLab() {
         title="CUSTOM APPERROR"
         description="Throws a named AppError subclass with a nested cause. Gives Seer a richer error tree to walk."
       >
-        <button
-          type="button"
-          className="btn-trigger"
-          onClick={() => {
+        <LabTrigger
+          lab="errors"
+          specimen="SPC-ERR-07"
+          onClickAction={() => {
             throw new AppError(
               "E_DISCOUNT_INVALID",
               "Discount BAD failed validation",
@@ -163,8 +163,8 @@ export default function ErrorsLab() {
             );
           }}
         >
-          <span className="btn-trigger-label">[ TRIGGER ]</span>
-        </button>
+          TRIGGER
+        </LabTrigger>
       </LabSpecimen>
     </div>
   );

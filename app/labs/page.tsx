@@ -39,11 +39,10 @@ const labs = [
   },
   {
     id: "SPC-EXP-06",
-    title: "Reserved",
+    title: "Metrics",
     description:
-      "Bay reserved for a future scenario. Schematics pending; instruments idle.",
-    href: "#",
-    reserved: true,
+      "Counters, gauges, and distributions for cross-cutting telemetry.",
+    href: "/labs/metrics",
   },
 ];
 

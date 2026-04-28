@@ -45,7 +45,7 @@ export default function SeerLab() {
     <div className="cascade">
       <PageHeader
         number="04"
-        total="05"
+        total="06"
         path="/labs/seer"
         title="Seer"
         subtitle="Buggy checkout with a deep, well-named call chain. Hit DIAGNOSE to capture the throw."

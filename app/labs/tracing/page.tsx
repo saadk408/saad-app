@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PageHeader } from "@/app/components/page-header";
 import { LabSpecimen, type LogEntry } from "@/app/components/lab-specimen";
-import { LabTriggerSubmit } from "@/app/components/lab-trigger";
+import { LabTrigger, LabTriggerSubmit } from "@/app/components/lab-trigger";
 import { slowWork } from "./actions";
 
 export default function TracingLab() {
@@ -14,7 +14,7 @@ export default function TracingLab() {
     <div className="cascade">
       <PageHeader
         number="02"
-        total="05"
+        total="06"
         path="/labs/tracing"
         title="Tracing"
         subtitle="Spans, distributed traces, and one slot for a custom Sentry.startSpan."
@@ -28,11 +28,11 @@ export default function TracingLab() {
         result={log?.id === "SPC-TRC-01" ? log.text : null}
         resultTone="ok"
       >
-        <button
-          type="button"
-          className="btn-trigger"
-          disabled={busy === "SPC-TRC-01"}
-          onClick={async () => {
+        <LabTrigger
+          lab="tracing"
+          specimen="SPC-TRC-01"
+          pending={busy === "SPC-TRC-01"}
+          onClickAction={async () => {
             setBusy("SPC-TRC-01");
             const t0 = performance.now();
             const res = await fetch("/api/echo", {
@@ -50,8 +50,8 @@ export default function TracingLab() {
             setBusy(null);
           }}
         >
-          <span className="btn-trigger-label">[ TRIGGER{busy === "SPC-TRC-01" ? " …" : ""} ]</span>
-        </button>
+          TRIGGER
+        </LabTrigger>
       </LabSpecimen>
 
       <LabSpecimen
@@ -62,11 +62,11 @@ export default function TracingLab() {
         result={log?.id === "SPC-TRC-02" ? log.text : null}
         resultTone="ok"
       >
-        <button
-          type="button"
-          className="btn-trigger"
-          disabled={busy === "SPC-TRC-02"}
-          onClick={async () => {
+        <LabTrigger
+          lab="tracing"
+          specimen="SPC-TRC-02"
+          pending={busy === "SPC-TRC-02"}
+          onClickAction={async () => {
             setBusy("SPC-TRC-02");
             const t0 = performance.now();
             const results = await Promise.all(
@@ -83,8 +83,8 @@ export default function TracingLab() {
             setBusy(null);
           }}
         >
-          <span className="btn-trigger-label">[ TRIGGER{busy === "SPC-TRC-02" ? " …" : ""} ]</span>
-        </button>
+          TRIGGER
+        </LabTrigger>
       </LabSpecimen>
 
       <LabSpecimen
@@ -106,11 +106,11 @@ export default function TracingLab() {
         result={log?.id === "SPC-TRC-04" ? log.text : null}
         resultTone="info"
       >
-        <button
-          type="button"
-          className="btn-trigger"
-          disabled={busy === "SPC-TRC-04"}
-          onClick={async () => {
+        <LabTrigger
+          lab="tracing"
+          specimen="SPC-TRC-04"
+          pending={busy === "SPC-TRC-04"}
+          onClickAction={async () => {
             setBusy("SPC-TRC-04");
             // TODO: wrap in Sentry.startSpan({ name: "checkoutFlow" }, async () => { ... })
             const t0 = performance.now();
@@ -130,8 +130,8 @@ export default function TracingLab() {
             setBusy(null);
           }}
         >
-          <span className="btn-trigger-label">[ TRIGGER{busy === "SPC-TRC-04" ? " …" : ""} ]</span>
-        </button>
+          TRIGGER
+        </LabTrigger>
       </LabSpecimen>
     </div>
   );

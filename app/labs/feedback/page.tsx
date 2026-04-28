@@ -5,7 +5,7 @@ export default function FeedbackLab() {
     <div className="cascade max-w-3xl">
       <PageHeader
         number="05"
-        total="05"
+        total="06"
         path="/labs/feedback"
         title="Feedback"
         subtitle="Anchor for Sentry's feedback widget. Mounts globally once feedbackIntegration is enabled."

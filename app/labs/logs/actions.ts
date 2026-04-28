@@ -1,16 +1,22 @@
 "use server";
 
-export async function serverLog(formData: FormData): Promise<void> {
-  const fields = {
-    orderId: String(formData.get("orderId") ?? "ord_test"),
-    userId: String(formData.get("userId") ?? "usr_anon"),
-    total: Number(formData.get("total") ?? 0),
-    at: new Date().toISOString(),
-  };
+import { withLabMetric } from "@/lib/metrics";
 
-  console.info("server.log.info", fields);
-  console.warn("server.log.warn", { ...fields, reason: "soft-budget-exceeded" });
-  console.error("server.log.error", { ...fields, reason: "kafka-lag" });
+export const serverLog = withLabMetric(
+  "logs",
+  "SPC-LOG-04",
+  async (formData: FormData): Promise<void> => {
+    const fields = {
+      orderId: String(formData.get("orderId") ?? "ord_test"),
+      userId: String(formData.get("userId") ?? "usr_anon"),
+      total: Number(formData.get("total") ?? 0),
+      at: new Date().toISOString(),
+    };
 
-  // TODO: when Sentry is wired in, replace with Sentry.logger.{info,warn,error}({ ...fields }).
-}
+    console.info("server.log.info", fields);
+    console.warn("server.log.warn", { ...fields, reason: "soft-budget-exceeded" });
+    console.error("server.log.error", { ...fields, reason: "kafka-lag" });
+
+    // TODO: when Sentry is wired in, replace with Sentry.logger.{info,warn,error}({ ...fields }).
+  },
+);

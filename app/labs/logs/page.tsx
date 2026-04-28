@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PageHeader } from "@/app/components/page-header";
 import { LabSpecimen, type LogEntry } from "@/app/components/lab-specimen";
-import { LabTriggerSubmit } from "@/app/components/lab-trigger";
+import { LabTrigger, LabTriggerSubmit } from "@/app/components/lab-trigger";
 import { serverLog } from "./actions";
 
 export default function LogsLab() {
@@ -13,7 +13,7 @@ export default function LogsLab() {
     <div className="cascade">
       <PageHeader
         number="03"
-        total="05"
+        total="06"
         path="/labs/logs"
         title="Logs"
         subtitle="Client console output and server-side structured logs. Sentry.logger.* drops in here."
@@ -26,17 +26,17 @@ export default function LogsLab() {
         description="Emits console.info from the browser. Sentry's browser logger hooks via console integration."
         result={log?.id === "SPC-LOG-01" ? log.text : null}
       >
-        <button
-          type="button"
-          className="btn-trigger"
-          onClick={() => {
+        <LabTrigger
+          lab="logs"
+          specimen="SPC-LOG-01"
+          onClickAction={() => {
             const fields = { route: "/labs/logs", level: "info", at: new Date().toISOString() };
             console.info("client.log.info", fields);
             setLog({ id: "SPC-LOG-01", text: `console.info\n${JSON.stringify(fields, null, 2)}` });
           }}
         >
-          <span className="btn-trigger-label">[ EMIT ]</span>
-        </button>
+          EMIT
+        </LabTrigger>
       </LabSpecimen>
 
       <LabSpecimen
@@ -46,17 +46,17 @@ export default function LogsLab() {
         description="Emits console.warn with a structured payload. Often the right level for soft budget exceedances."
         result={log?.id === "SPC-LOG-02" ? log.text : null}
       >
-        <button
-          type="button"
-          className="btn-trigger"
-          onClick={() => {
+        <LabTrigger
+          lab="logs"
+          specimen="SPC-LOG-02"
+          onClickAction={() => {
             const fields = { route: "/labs/logs", level: "warn", reason: "rate=487ms" };
             console.warn("client.log.warn", fields);
             setLog({ id: "SPC-LOG-02", text: `console.warn\n${JSON.stringify(fields, null, 2)}` });
           }}
         >
-          <span className="btn-trigger-label">[ EMIT ]</span>
-        </button>
+          EMIT
+        </LabTrigger>
       </LabSpecimen>
 
       <LabSpecimen
@@ -66,17 +66,17 @@ export default function LogsLab() {
         description="Emits console.error. Surfaces in DevTools and in Sentry once the SDK is wired."
         result={log?.id === "SPC-LOG-03" ? log.text : null}
       >
-        <button
-          type="button"
-          className="btn-trigger"
-          onClick={() => {
+        <LabTrigger
+          lab="logs"
+          specimen="SPC-LOG-03"
+          onClickAction={() => {
             const fields = { route: "/labs/logs", level: "error", reason: "auth-token-expired" };
             console.error("client.log.error", fields);
             setLog({ id: "SPC-LOG-03", text: `console.error\n${JSON.stringify(fields, null, 2)}` });
           }}
         >
-          <span className="btn-trigger-label">[ EMIT ]</span>
-        </button>
+          EMIT
+        </LabTrigger>
       </LabSpecimen>
 
       <LabSpecimen

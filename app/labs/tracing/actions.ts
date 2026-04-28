@@ -1,7 +1,12 @@
 "use server";
 
+import { withLabMetric } from "@/lib/metrics";
 import { delay } from "@/lib/slow";
 
-export async function slowWork(): Promise<void> {
-  await delay(1500);
-}
+export const slowWork = withLabMetric(
+  "tracing",
+  "SPC-TRC-03",
+  async (): Promise<void> => {
+    await delay(1500);
+  },
+);

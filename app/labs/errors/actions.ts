@@ -1,5 +1,7 @@
 "use server";
 
+import { withLabMetric } from "@/lib/metrics";
+
 function validateInput(payload: unknown) {
   if (!payload || typeof payload !== "object") {
     throw new Error("validateInput: payload missing");
@@ -15,7 +17,11 @@ function applyDiscount(input: { code: string }) {
   return 0.1;
 }
 
-export async function throwInAction(): Promise<void> {
-  const input = validateInput({ code: "BAD" });
-  applyDiscount(input);
-}
+export const throwInAction = withLabMetric(
+  "errors",
+  "SPC-ERR-04",
+  async (): Promise<void> => {
+    const input = validateInput({ code: "BAD" });
+    applyDiscount(input);
+  },
+);
