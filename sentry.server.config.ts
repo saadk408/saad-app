@@ -10,6 +10,9 @@ Sentry.init({
   // 100% in both dev and prod: this is a Sentry test lab and we want every transaction captured.
   tracesSampleRate: 1.0,
 
+  // Attach local variable values to server stack frames for richer debugging.
+  includeLocalVariables: true,
+
   // Enable logs to be sent to Sentry
   enableLogs: true,
 
