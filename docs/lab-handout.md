@@ -52,16 +52,21 @@ npx @sentry/wizard@latest -i nextjs
 The wizard will:
 
 1. Install `@sentry/nextjs`.
-2. Generate `sentry.client.config.ts`, `sentry.server.config.ts`,
-   `sentry.edge.config.ts`. (In Next 16 the client config is renamed to
-   `instrumentation-client.ts` — accept whichever the wizard creates.)
+2. Generate `instrumentation-client.ts` (client SDK init plus the
+   `onRouterTransitionStart` export for App Router navigation tracing),
+   `sentry.server.config.ts`, and `sentry.edge.config.ts`.
+   `instrumentation-client.ts` replaces the legacy
+   `sentry.client.config.ts`; the Next.js 15+ wizard generates only the
+   new name.
 3. Wrap `next.config.ts` with `withSentryConfig`.
 4. Populate `instrumentation.ts` so the runtime configs load on each
    runtime.
 5. Generate `app/global-error.tsx` (overwriting the trainee stub at
    `app/global-error.tsx` — review the diff carefully).
 6. Drop a `.env.sentry-build-plugin` with `SENTRY_AUTH_TOKEN` for
-   source-map upload.
+   source-map upload. The current docs' canonical form is to also pass
+   `authToken: process.env.SENTRY_AUTH_TOKEN` to `withSentryConfig` in
+   `next.config.ts`; the build plugin reads either source.
 
 After the wizard, restart `npm run dev` and confirm `npm run build`
 still succeeds. You should see source-map upload log lines in the build
@@ -124,10 +129,13 @@ a multi-step async chain marked `// TODO: wrap in Sentry.startSpan`.
 What to do:
 
 1. Auto-tracing should light up specimens 01–03 once `Sentry.init()` is
-   running with `tracesSampleRate: 1.0`.
+   running with `tracesSampleRate: 1.0`. Auto-tracing also depends on the
+   `onRouterTransitionStart` export from `instrumentation-client.ts` to
+   attribute client-side navigations — check that the wizard wired it
+   before chasing "missing" transactions.
 2. For specimen 04 (`SPC-TRC-04`), find the TODO in
    `app/labs/tracing/page.tsx` and wrap the three `await fetch(...)`
-   calls in `Sentry.startSpan({ name: "checkoutFlow" }, async () => { ... })`.
+   calls in `Sentry.startSpan({ name: "checkoutFlow", op: "function" }, async () => { ... })`.
    The result tile already says "ready for `Sentry.startSpan`."
 3. Confirm `/api/checkout` → `/api/payment` is one continuous trace
    when you check out at `/cart`.
@@ -146,8 +154,10 @@ What to do:
 1. Set `enableLogs: true` in your Sentry init (all three runtimes — the
    wizard may already do this).
 2. Replace the client `console.*` calls and the server Server Action's
-   `console.*` calls with `Sentry.logger.{info,warn,error}({ ...fields })`.
-   The TODO in `app/labs/logs/actions.ts` marks the spot.
+   `console.*` calls with `Sentry.logger.{info,warn,error}("message", { ...fields })`.
+   Message string first, structured attributes second — e.g.
+   `Sentry.logger.info("Order created", { orderId, total })`. The TODO in
+   `app/labs/logs/actions.ts` marks the spot.
 
 Verification: Logs explorer in Sentry shows your messages with the
 structured fields (`route`, `reason`, `orderId`, `userId`, `total`).
@@ -189,6 +199,11 @@ Feedback.
 
 ### `/labs/metrics`
 
+> Note: `Sentry.metrics.*` is in **open beta** and requires
+> `@sentry/nextjs >= 10.25.0`. The wizard installs the latest version,
+> so the default flow is fine; if you pinned an older SDK, upgrade
+> before wiring this lab.
+
 What it does today: five specimens. Each specimen's `onClickAction`
 already includes a `// TODO: Sentry.metrics.{count|gauge|distribution}(...)`
 line where the call belongs. Specimen 04 also exercises the
@@ -226,16 +241,41 @@ These don't live on a single lab page but are part of full coverage:
 - **`app/global-error.tsx`** — the wizard regenerates this. If you keep
   your existing styled UI, restore the `useEffect` from the TODO so
   errors capture before the boundary renders.
+- **`instrumentation-client.ts` → `onRouterTransitionStart`** — the
+  wizard exports
+  `onRouterTransitionStart = Sentry.captureRouterTransitionStart`.
+  Don't delete it; it produces spans for client-side App Router
+  navigation (`/products → /cart → /signin`). If your demo flow shows
+  page-load transactions but no navigation spans between them, this
+  export is missing.
+- **Server Actions** — `"use server"` functions are not
+  auto-instrumented under Webpack or Turbopack. Wrap each one in
+  `Sentry.withServerActionInstrumentation("actionName", { headers: await headers(), formData, recordResponse: true }, async () => { ... })`
+  for named transactions, attached form data, and recorded responses.
+  Labs that benefit: `/labs/tracing` (SPC-TRC-03), `/labs/logs`,
+  `/labs/seer`, and `/labs/metrics`. Reference:
+  <https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/apis/#withServerActionInstrumentation>.
 - **`next.config.ts`** — already has a TODO showing the
   `withSentryConfig(...)` wrapper. The wizard rewrites this; review the
-  diff to understand each option (`org`, `project`, `tunnelRoute`,
-  `widenClientFileUpload`, `release.setCommits`).
+  diff to understand each option (`org`, `project`, `authToken`,
+  `tunnelRoute`, `widenClientFileUpload`).
 - **Source-map upload** — the build plugin reads `SENTRY_AUTH_TOKEN`
   from `.env.sentry-build-plugin`. The wizard generates that file; do
   not commit it (the `.env*` rule in `.gitignore` already ignores it).
+  Equivalent canonical form per the docs:
+  `withSentryConfig(nextConfig, { authToken: process.env.SENTRY_AUTH_TOKEN, ... })`.
+  On Turbopack (this repo's default), source-map upload runs through
+  Next.js 15.4.1+'s `runAfterProductionCompile` hook; the wizard sets
+  `useRunAfterProductionCompileHook: true` automatically. If you switch
+  to Webpack and source maps stop uploading, you may need to opt in
+  manually.
 - **`tunnelRoute: "/monitoring"`** — routes Sentry traffic through your
   own domain to bypass ad-blockers. Worth knowing about even if you
-  don't enable it locally.
+  don't enable it locally. If you do enable it, exclude the route from
+  `proxy.ts`'s matcher (e.g.
+  `(?!monitoring|_next/static|_next/image|favicon.ico)`). This repo
+  runs on Turbopack, where Sentry will *not* auto-skip the tunnel route
+  in your proxy and client events will silently fail to send.
 - **Sampling** — all three runtimes use `tracesSampleRate: 1.0` for
   this lab so every transaction is captured. In production you would
   sample lower or use `tracesSampler` for finer control.
@@ -324,7 +364,7 @@ remains a single distributed trace.
   general code-intelligence rules we use in this repo.
 - Sentry docs: <https://docs.sentry.io/platforms/javascript/guides/nextjs/>
 - Wizard docs: <https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/>
-- Seer setup: <https://docs.sentry.io/product/issues/issue-details/ai-suggested-solution/>
+- Seer setup: <https://docs.sentry.io/product/ai-in-sentry/seer/>
 
 ---
 

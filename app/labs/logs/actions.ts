@@ -17,6 +17,6 @@ export const serverLog = withLabMetric(
     console.warn("server.log.warn", { ...fields, reason: "soft-budget-exceeded" });
     console.error("server.log.error", { ...fields, reason: "kafka-lag" });
 
-    // TODO: when Sentry is wired in, replace with Sentry.logger.{info,warn,error}({ ...fields }).
+    // TODO: when Sentry is wired in, replace with Sentry.logger.{info,warn,error}("message", { ...fields }).
   },
 );
