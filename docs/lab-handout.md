@@ -127,6 +127,11 @@ install the tools and create the accounts listed below.
 - **Git.** Git is how we copy the lab code from GitHub onto your
   computer. Install from <https://git-scm.com/downloads>. Verify by
   typing `git --version` in a terminal.
+  - **macOS first-run note:** the very first time you run `git` in
+    Terminal, macOS may pop up a "Command Line Developer Tools"
+    install prompt. Click **Install**, wait 5–10 minutes for it to
+    finish, then close and reopen Terminal. This is normal and only
+    happens once.
 
 ### Accounts to create
 
@@ -136,6 +141,11 @@ install the tools and create the accounts listed below.
 - **A GitHub account.** You'll use it later in §9 so Seer can read
   source code from this repo. Sign up at <https://github.com/> if you
   don't have one already.
+  - **Authenticate Git on your laptop:** the simplest path for
+    non-technical readers is to install **GitHub Desktop** from
+    <https://desktop.github.com/> and sign in once. That single step
+    wires authentication for every `git clone` you'll run from
+    Terminal — no SSH keys or tokens to manage.
 
 ---
 
@@ -219,18 +229,25 @@ that application first and click around.
 
 ### 4.1 — Get the code
 
-Open a terminal (§3.5 if you need a refresher) and run:
+Open a terminal (§3.5 if you need a refresher). Type these three
+commands one at a time, pressing Enter after each:
 
 ```bash
+cd ~/Documents
 git clone <this-repo-url>
 cd saad-app
 ```
 
+`cd ~/Documents` puts the lab folder somewhere Finder can find it
+later (Documents → saad-app). On Windows, replace it with
+`cd %USERPROFILE%\Documents`.
+
 Replace `<this-repo-url>` with the actual URL your manager gave you.
 For example, if your manager gave you
-`https://github.com/your-org/saad-app.git`, your two commands are:
+`https://github.com/your-org/saad-app.git`, your three commands are:
 
 ```bash
+cd ~/Documents
 git clone https://github.com/your-org/saad-app.git
 cd saad-app
 ```
@@ -943,8 +960,13 @@ The pattern in every case:
 
 1. Add two new imports at the top of the file.
 2. Wrap the function body in `Sentry.withServerActionInstrumentation(...)`.
-3. Make sure the function takes a `formData: FormData` parameter
-   (some don't, by default — add it).
+3. For form-driven actions (Files A and B below — invoked from
+   `<form action={...}>` directly), add `formData: FormData` to the
+   signature and pass `formData` into the instrumentation options.
+4. For programmatic actions wrapped by `useActionState` (Files C and
+   D below — invoked from a closure that passes no arguments), keep
+   the signature unchanged and omit `formData` from the options.
+   `formData` is optional; the action still becomes a named span.
 
 **File A · `app/labs/tracing/actions.ts`.** This file already exists
 with a `slowWork` Server Action. **Before:**
@@ -1032,12 +1054,11 @@ action you edited in step 2). Wrap `runBuggyCheckout` the same way:
 export const runBuggyCheckout = withLabMetric(
   "seer",
   "SPC-SEE-01",
-  async (formData: FormData): Promise<SeerResult> => {
+  async (): Promise<SeerResult> => {
     return Sentry.withServerActionInstrumentation(
       "runBuggyCheckout",
       {
         headers: await headers(),
-        formData,
         recordResponse: true,
       },
       async () => {
@@ -1072,12 +1093,11 @@ action from step 7):
 export const recordServerCount = withLabMetric(
   "metrics",
   "SPC-MET-04",
-  async (formData: FormData): Promise<ServerCountResult> => {
+  async (): Promise<ServerCountResult> => {
     return Sentry.withServerActionInstrumentation(
       "recordServerCount",
       {
         headers: await headers(),
-        formData,
         recordResponse: true,
       },
       async () => {
@@ -1100,7 +1120,7 @@ When you've finished filling in TODOs, run the same search again from
 the project root:
 
 ```bash
-rg -n "TODO" .
+rg -n "// TODO" app lib
 ```
 
 You should see no results in the code files listed in the table
@@ -1206,10 +1226,13 @@ can pivot through them in Sentry without digging through raw text.
 `console.{info,warn,error}` specimens and one Server Action that
 emits the same three levels with structured payloads.
 
-**What you change in code.** Set `enableLogs: true` in your Sentry
-init across all three runtimes (the wizard may already do this).
-Replace each `console.*` call in `app/labs/logs/page.tsx` and
-`app/labs/logs/actions.ts` with
+**What you change in code.** Logs require `enableLogs: true` in
+every Sentry runtime that should emit them. Open all three init
+files the wizard created — `instrumentation-client.ts`,
+`sentry.server.config.ts`, and `sentry.edge.config.ts` — and confirm
+each `Sentry.init({ ... })` block contains `enableLogs: true`. If
+any file is missing it, add the line. Then replace each `console.*`
+call in `app/labs/logs/page.tsx` and `app/labs/logs/actions.ts` with
 `Sentry.logger.{info,warn,error}("message", { ...fields })`. Message
 string first, structured attributes second — e.g.
 `Sentry.logger.info("Order created", { orderId, total })`.
@@ -1543,6 +1566,20 @@ generate a token at **Settings → Auth Tokens** in Sentry.
   Network tab) and filter by `sentry`. If you see no requests at
   all, the SDK isn't loading; if you see requests but they show 4xx
   status codes, the DSN is wrong.
+
+**"My logs don't show up in Sentry."**
+
+- Confirm `enableLogs: true` is set in `instrumentation-client.ts`,
+  `sentry.server.config.ts`, AND `sentry.edge.config.ts` — missing
+  it in any one file silently drops logs from that runtime.
+- Check that you swapped `console.*` for `Sentry.logger.*` (not
+  `Sentry.captureMessage` — that's a different API for one-off
+  events).
+- Open Sentry → **Logs** explorer (not Issues). Logs land in their
+  own tab.
+- For Server Action logs, confirm
+  `Sentry.withServerActionInstrumentation(...)` wraps the action —
+  without the wrap, server-side logs may not associate with a trace.
 
 **"TypeScript errors after the wizard."** Usually a transient cache.
 Stop the dev server (Ctrl+C in its terminal), delete the `.next/`

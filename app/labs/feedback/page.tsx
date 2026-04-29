@@ -31,7 +31,7 @@ export default function FeedbackLab() {
       </div>
 
       <pre className="panel-soft text-[11px] overflow-auto whitespace-pre p-4 mb-6">
-        {`// sentry.client.config.ts (after wizard runs)
+        {`// instrumentation-client.ts (after wizard runs)
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   integrations: [

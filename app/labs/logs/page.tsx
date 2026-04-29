@@ -31,6 +31,8 @@ export default function LogsLab() {
           specimen="SPC-LOG-01"
           onClickAction={() => {
             const fields = { route: "/labs/logs", level: "info", at: new Date().toISOString() };
+            // TODO: replace console.info with Sentry.logger.info once the SDK is wired:
+            //   Sentry.logger.info("client.log.info", fields);
             console.info("client.log.info", fields);
             setLog({ id: "SPC-LOG-01", text: `console.info\n${JSON.stringify(fields, null, 2)}` });
           }}
@@ -51,6 +53,8 @@ export default function LogsLab() {
           specimen="SPC-LOG-02"
           onClickAction={() => {
             const fields = { route: "/labs/logs", level: "warn", reason: "rate=487ms" };
+            // TODO: replace console.warn with Sentry.logger.warn once the SDK is wired:
+            //   Sentry.logger.warn("client.log.warn", fields);
             console.warn("client.log.warn", fields);
             setLog({ id: "SPC-LOG-02", text: `console.warn\n${JSON.stringify(fields, null, 2)}` });
           }}
@@ -71,6 +75,8 @@ export default function LogsLab() {
           specimen="SPC-LOG-03"
           onClickAction={() => {
             const fields = { route: "/labs/logs", level: "error", reason: "auth-token-expired" };
+            // TODO: replace console.error with Sentry.logger.error once the SDK is wired:
+            //   Sentry.logger.error("client.log.error", fields);
             console.error("client.log.error", fields);
             setLog({ id: "SPC-LOG-03", text: `console.error\n${JSON.stringify(fields, null, 2)}` });
           }}
