@@ -7,9 +7,11 @@ const nextConfig: NextConfig = {};
 //   export default withSentryConfig(nextConfig, {
 //     org: "<your-org>",
 //     project: "<your-project>",
+//     authToken: process.env.SENTRY_AUTH_TOKEN,
 //     silent: !process.env.CI,
 //     widenClientFileUpload: true,
-//     tunnelRoute: "/monitoring",
-//     release: { setCommits: { auto: true } },
+//     tunnelRoute: "/sentry-tunnel",
+//     // Source-map upload + auto-delete are the default in v9+; no
+//     // setCommits block needed.
 //   });
 export default nextConfig;

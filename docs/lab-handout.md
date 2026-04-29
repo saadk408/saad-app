@@ -401,6 +401,11 @@ looks like** at the end:
 Sentry has been successfully configured for your Next.js project.
 ```
 
+The wizard also drops a `/sentry-example-page` route and an
+`/api/sentry-example-api` route handler. They're a smoke test — you
+can leave them in (handy if you want to verify the SDK independently
+of `/labs/errors`) or delete them once you've finished §6.
+
 The exact line wording can vary slightly between wizard versions, but
 you should see roughly seven `✓` checkmarks and a final "successfully
 configured" line. If you see a red `✗` or an error stack, jump to §12.
@@ -908,9 +913,13 @@ return async (...args: TArgs): Promise<TResult> => {
 };
 ```
 
-The `flush` is critical: serverless Server Actions can terminate
-before the metric buffer auto-flushes, and you'd lose the last few
-samples without it.
+The `flush` matters when the lab runs on a serverless host (Vercel,
+Lambda, Cloudflare Workers): the function process can terminate
+before the SDK's background transport drains the metric buffer, and
+you'd lose the last few samples without it. On long-lived Node
+servers (`npm run dev`, `npm start`), the background transport
+drains on its own and the flush is a no-op — keep it anyway so the
+same code works on either.
 
 ### 9 · `app/components/lab-trigger.tsx` — client-side `lab_trigger`
 
@@ -1199,18 +1208,20 @@ see where the time goes.
   wrap in Sentry.startSpan` comment.
 
 **What you change in code.** Auto-tracing covers specimens 01–03 once
-`Sentry.init()` runs with `tracesSampleRate: 1.0`. Auto-tracing
-depends on the `onRouterTransitionStart` export from
+`Sentry.init()` runs with a non-zero `tracesSampleRate` (the wizard
+ships a NODE_ENV-aware default — `1.0` in development, `0.1` in
+production). Auto-tracing depends on the `onRouterTransitionStart`
+export from
 `instrumentation-client.ts` to attribute client-side navigations —
 check that the wizard wired it before chasing "missing" transactions.
 For **SPC-TRC-04**, find the TODO in `app/labs/tracing/page.tsx` and
 apply the before/after shown in §7. Confirm `/api/checkout` →
 `/api/payment` is one continuous trace when you check out at `/cart`.
 
-**Verify in Sentry.** Open the **Performance** tab. The 3-hop chain
-shows three nested `/api/echo` spans; the parallel run shows five
-concurrent fetches under one transaction; the custom span has the
-name you chose.
+**Verify in Sentry.** Open the **Traces** tab (under **Explore**;
+formerly **Performance**). The 3-hop chain shows three nested
+`/api/echo` spans; the parallel run shows five concurrent fetches
+under one root span; the custom span has the name you chose.
 
 **What you learned.** A `Sentry.startSpan` call gives any block of
 code its own measurable segment in a trace.
@@ -1303,10 +1314,13 @@ required.
 
 ### `/labs/metrics`
 
-> **Note.** `Sentry.metrics.*` is in **open beta** and requires
-> `@sentry/nextjs >= 10.25.0`. The wizard installs the latest version,
-> so the default flow is fine; if you pinned an older SDK, upgrade
-> before wiring this lab.
+> **Note.** Sentry's Application Metrics returned to **open beta** in
+> `@sentry/nextjs` 10.25.0 after the previous beta ended in late 2024.
+> The shape (`count` / `gauge` / `distribution`) is unchanged but it's
+> a separate feature — older blog posts about the discontinued beta
+> no longer apply. The wizard installs a current SDK, so the default
+> flow is fine; if you pinned `<10.25.0`, upgrade before wiring this
+> lab.
 
 **Customer scenario.** A customer says: "We need to track signups,
 queue depth, and request latency over time without writing custom
@@ -1368,12 +1382,22 @@ then open **Settings → [Your Project] → Environments** to see that
 Seer can't analyze code it can't read. Connect GitHub now so §10's
 Seer exercise works.
 
-1. Go to **Settings → Integrations**.
-2. Find **GitHub** in the list and click **Add Installation**.
-3. Authorize Sentry on GitHub — pick the repo for this lab (or your
-   whole org).
-4. Back in Sentry, go to **Settings → [Your Project] → Source Code
-   Management** and confirm the repo is linked.
+1. Go to **Seer settings**
+   (`sentry.io/orgredirect/organizations/<your-org>/settings/seer/`)
+   — the dedicated Seer settings page, separate from
+   **Settings → Integrations**.
+2. Connect to GitHub through the Sentry GitHub integration if you
+   haven't already; pick the repo for this lab (or your whole org).
+3. **Install the Seer GitHub app** (separate from the base GitHub
+   integration). It's required for Seer to create PRs from Autofix.
+4. Turn on the Seer features you want for this project: Issue
+   Autofix, Coding Agent handoff (Claude Code / Cursor / Copilot),
+   and Code Review.
+
+**Heads up on pricing.** Seer is a paid add-on with active-contributor
+billing — anyone who creates 2+ PRs in a month in a Seer-enabled
+project gets billed. If you hit a paywall mid-§10.4, post in
+**#onboarding-help**.
 
 ### 9.3 — Connect Slack (optional but realistic)
 
@@ -1404,10 +1428,11 @@ Sampling controls how many traces, replays, or profiles Sentry
 actually records. Capturing 100% of everything is fine for a lab but
 expensive at production scale.
 
-For this lab the wizard set `tracesSampleRate: 1.0` (every trace).
-For production you'd lower it (`0.1` = 10% of traces). The deeper
-controls — per-request sampling functions, per-environment overrides
-— live in §14's maintainer notes. You don't need them for this lab.
+The wizard ships a production-aware default: `tracesSampleRate: 1.0`
+in development, `0.1` (10% of traces) in production. Override with a
+`tracesSampler` function for finer control — per-request sampling
+functions and per-environment overrides live in §14's maintainer
+notes. You don't need that for this lab.
 
 ### 9.6 — DSNs and what the wizard set
 
@@ -1445,9 +1470,9 @@ that's where it lives.
 
 1. Click `TRIGGER` on **SPC-TRC-01** in `/labs/tracing` if you
    haven't recently.
-2. In Sentry, go to **Performance**. Find the recent **transaction**
-   (§13) for `POST /api/echo` (or whatever Sentry named your
-   top-level transaction).
+2. In Sentry, go to **Traces** (formerly **Performance** — the URL
+   is `/explore/traces/`). Find the recent trace for
+   `POST /api/echo` (or whatever Sentry named your root span).
 3. Click into it. You should see a **waterfall** — three nested
    `/api/echo` spans, each one starting after the previous one
    responds.
@@ -1462,8 +1487,13 @@ that's where it lives.
 3. Click play. You'll see a video-like reconstruction of what your
    browser rendered.
 4. Open `/signin` in the replay. The password input should be
-   **masked** (shown as dots) — Sentry masks password inputs by
-   default to keep sensitive data out of recordings.
+   **masked** (shown as dots). Sentry's default is aggressive —
+   **all text, all inputs, and all media** are masked, not just
+   password fields. To unmask non-sensitive content on a static
+   site, configure
+   `replayIntegration({ maskAllText: false, blockAllMedia: false })`,
+   or use `data-sentry-unmask` on specific elements. Defaults assume
+   privacy first.
 
 ### 10.4 — Run Seer
 
@@ -1471,11 +1501,12 @@ that's where it lives.
 2. In Sentry, find the resulting issue (a `TypeError` from
    `applyDiscount`).
 3. Click **"Analyze with Seer"** at the top of the issue.
-4. Watch Seer walk the call chain — it will read
+4. Watch Seer walk the call chain — it should read
    `parseOrder → validateLineItem → priceOf → applyDiscount`,
-   identify that `priceOf("missing")` returns `undefined`, and tell
-   you the fix is to add a `if (price === undefined) return 0;` guard
-   inside `applyDiscount`.
+   identify `applyDiscount` as the bug site, and recommend an
+   `undefined` guard before the `.toFixed(2)` call. Exact wording
+   will vary; what matters is that Seer correctly localises the bug
+   to `applyDiscount`.
 
 ### 10.5 — Submit user feedback
 
@@ -1512,8 +1543,9 @@ Run through this before declaring done.
    50/50 success/fail; dashboard counters move.
 5. **Sentry → Issues:** at least one event per `/labs/errors`
    specimen; `/labs/seer` produces an issue with the deep call chain.
-6. **Sentry → Performance:** `/labs/tracing` specimens 01–03 produce
-   visible spans; specimen 04 has a custom span named what you chose.
+6. **Sentry → Explore → Traces:** `/labs/tracing` specimens 01–03
+   produce visible spans; specimen 04 has a custom span named what
+   you chose.
 7. **Sentry → Logs:** `/labs/logs` emits client + server structured
    logs with the right level.
 8. **Sentry → Replays:** a session replay exists for the demo flow
@@ -1557,8 +1589,10 @@ generate a token at **Settings → Auth Tokens** in Sentry.
   wizard configured (look at the DSN in `instrumentation-client.ts`
   and compare it to **Settings → [Your Project] → Client Keys** in
   Sentry).
-- Check that `tracesSampleRate: 1.0` is set in all three Sentry
-  config files for performance events.
+- Check that `tracesSampleRate` is set in all three Sentry config
+  files for performance events. The wizard's default (`1.0` in
+  development, `0.1` in production) is fine; just confirm the line
+  isn't missing.
 - For Server Action labs, confirm
   `Sentry.withServerActionInstrumentation(...)` is wrapping the
   action — without it, Server Actions are not captured.
@@ -1645,7 +1679,10 @@ Quick re-lookup for terms used in this handout.
   query).
 - **Trace** — the timeline of one request's trip through your
   services. Made of spans.
-- **Transaction** — Sentry's word for a top-level trace.
+- **Transaction** — legacy term for a top-level trace. Sentry's UI
+  now says **Trace** (under **Explore → Traces**); you'll still see
+  `transaction` as a field name in the event payload and in older
+  docs.
 - **Throw** — developer slang for "raise an error." When code
   "throws," it stops normal execution and surfaces an error object.
 - **Wizard** — the `npx @sentry/wizard@latest -i nextjs` command

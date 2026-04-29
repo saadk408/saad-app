@@ -37,7 +37,6 @@ Sentry.init({
   integrations: [
     Sentry.feedbackIntegration({
       colorScheme: "system",
-      autoInject: true,
     }),
   ],
 });`}
